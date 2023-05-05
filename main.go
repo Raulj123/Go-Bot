@@ -12,6 +12,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type Answers struct {
+	OriginChannelId string
+	FavAnime        string
+	FavGame         string
+}
+
+var responses map[string]Answers = map[string]Answers{}
+
 const prefix string = "!gob"
 
 func main() {
@@ -53,6 +61,9 @@ func main() {
 		if args[1] == "hello" {
 			s.ChannelMessageSend(m.ChannelID, "world")
 		}
+		if args[1] == "prompt" {
+			UserPromptHandler(s, m)
+		}
 	})
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
@@ -72,4 +83,25 @@ func main() {
 		return
 	}
 
+}
+
+func UserPromptHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	//user channel
+	channel, err := s.UserChannelCreate(m.Author.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//if user is alredy answering questions, ignore otherwise ask
+	if _, ok := responses[channel.ID]; !ok {
+		responses[channel.ID] = Answers{
+			OriginChannelId: m.ChannelID,
+			FavAnime:        "",
+			FavGame:         "",
+		}
+		s.ChannelMessageSend(channel.ID, "Yuh")
+		s.ChannelMessageSend(channel.ID, "Whats your fav anime bruh")
+	} else {
+		s.ChannelMessageSend(channel.ID, "Bruh...??")
+	}
 }
